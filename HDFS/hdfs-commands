@@ -1,0 +1,10 @@
+hadoop fs -mkdir /user/seesnehabits7136/retail-db  #create a new directory name retail-db
+hadoop fs -ls /user/seesnehabits7136/retail-db  #list all the files in the hadoop directory retail-db
+
+# dfs commands in the hive shell
+
+dfs -ls dfs -ls /apps/hive/warehouse/sqoop_import.db/departments;
+dfs -du -s -h /apps/hive/warehouse/sqoop_import.db/departments;
+
+
+

@@ -1,0 +1,5 @@
+#PIG
+
+load_data = load 'home/seesnehabits7136/data/pig_demo.txt
+dump load_data;
+

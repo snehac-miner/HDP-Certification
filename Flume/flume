@@ -1,0 +1,16 @@
+#Given a flume configuration file start a Flume agent
+# cd /etc/flume/conf
+# check the agent name in the file flume-conf.properties.template
+
+# Next line starts the flume agent using flume-ng command
+
+flume-ng agent -n agent -c conf -f conf/flume-conf.properties.template
+
+#Task2; Given a source and a sink configure a flume memory channel with a specif#ied capacity
+
+a1.channels = c1
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 10000
+a1.channels.c1.transactionCapacity = 10000
+a1.channels.c1.byteCapacityBufferPercentage = 20
+a1.channels.c1.byteCapacity = 800000

@@ -1,0 +1,191 @@
+
+# SQOOP List and eval commands
+sqoop list-databases --connect "jdbc:mysql://f.cloudxlab.com:7136/retail_db" --username sqoopuser -P
+sqoop list-tables --connect "jdbc:mysql://ip-172-31-13-154/retail_db" --username sqoopuser -P
+sqoop eval --connect "jdbc:mysql://ip-172-31-13-154/retail_db" --username sqoopuser -P  --query "select * from departments"
+
+# Import data from MySQL to HDFS
+sqoop import-all-tables --connect "jdbc:mysql://ip-172-31-13-154/retail_db" --username sqoopuser -P --warehouse-dir /user/seesnehabits7136/retail-db --as-avrodatafile
+#Note1: You cannot use --target-dir argument as a part of import-all-tables command
+#Note2: --warehouse-dir argument represents HDFS parent for table destination
+
+# Import data into hive warehouse directory
+
+sqoop import-all-tables --connect "jdbc:mysql://ip-172-31-13-154/retail_db" --username sqoopuser -P -- as-avrodatafile  --warehouse-dir /apps/hive/warehouse/retail.practice.db
+
+# Import data from a mysql table into a target hdfs directory
+
+sqoop import --connect "jdbs:mysql://ip-172-31-13-154/retail_db"  -- username sqoopuser -P -- as-avrodatafile --table departments -- target-dir  /apps/hive/warehouse/retail_practice/depts  --boundary-query "select min(department_id), max(department_id) from departments where department_id <> 8000"   
+
+#Note: Find the use of boundary-query arguement on this link  https://www.safaribooksonline.com/library/view/apache-sqoop-cookbook/9781449364618/ch04.html     
+# boundary-query helps to split data to multiple input tasks to be able to load data from mysql to hdfs
+
+
+#There are two way you can import data into hive. You can create the table in hive and then import the data. Another option is to create the table while importing data into hive.
+
+#Overwrite existing data in a hive table using hive-overwrite command
+
+sqoop import \
+--connect "jdbc:mysql://ip-172-31-13-154/retail_db" \
+ --username sqoopuser  \
+ --password NHkkP876rp \
+ --table departments  \
+--fields-terminated-by '|' \
+--lines-terminated-by '\n' \
+--hive-home /apps/hive/warehouse/sqoop_retaildb.db \
+--hive-import \
+--hive-overwrite \
+--hive-table sqoop_retaildb.departments1 \
+--outdir java_files 
+
+
+# the following command creates the hive table on the fly
+sqoop import \
+--connect "jdbc:mysql://ip-172-31-13-154/retail_db" \
+ --username sqoopuser  \
+ --password NHkkP876rp \
+ --table categories  \
+--fields-terminated-by '|' \
+--lines-terminated-by '\n' \
+--hive-home /apps/hive/warehouse/sqoop_retaildb.db \
+--hive-import \
+--hive-table sqoop_retaildb.categories  \
+--outdir java_files 
+   
+
+# the following coomand appends the records to an existing hive table
+sqoop import \
+--connect "jdbc:mysql://ip-172-31-13-154/retail_db" \
+--username sqoopuser  \
+--password NHkkP876rp \
+--table departments  \
+--target-dir /apps/hive/warehouse/sqoop_retaildb.db/departments1 \ 
+--append
+--split-by department_id \
+--outdir java_files 
+   
+sqoop import \
+  --connect "jdbc:mysql://sandbox.hortonworks.com:3306/retail_db" \
+  --username=retail_dba \
+  --password=hadoop \
+  --table departments \
+  --target-dir /apps/hive/warehouse/retail_ods.db/departments1 \
+  
+#Export from HDFS to MySQL
+sqoop export \
+-- connect "jdbc:mysql://ip-172-31-13-154/retail_db"  \
+-- username sqoopuser
+-- password NHkkP876rp
+--table order_items_export
+--export-dir /sqoop export \
+-- connect "jdbc:mysql://ip-172-31-13-154/retail_db"  \
+-- username sqoopuser
+-- password NHkkP876rp 
+--table order_items_export
+--export-dir /user/seesnehabits7136/order_itemsuser/seesnehabits7136/order_items
+#Make sure table order_items_export exists in mysql database before running this command
+
+
+# Import and export delimiters
+sqoop export --connect  "jdbc:mysql://ip-172-31-13-154/retail_db"  \  
+  -- username sqoopuser
+  -- password NHkkP876rp
+  --table departments_test \
+  --export-dir /apps/hive/warehouse/departments_test \
+  --input-fields-terminated-by '\001' \
+  --input-lines-terminated-by '\n' \
+  --num-mappers 2 \
+  --batch \
+  --outdir java_files \
+  --input-null-string nvl \
+  --input-null-non-string -1
+
+
+#FILE FORMATS
+
+--Initial load
+sqoop import \
+  --connect "jdbc:mysql://ip-172-31-13-154/retail_db"  \
+   -- username sqoopuser
+  -- password NHkkP876rp
+  --table departments \
+  --as-textfile \
+  --target-dir=/user/root/sqoop_merge/departments
+
+
+sqoop job --create sqoop_job \
+  -- import \
+  --connect "jdbc:mysql://sandbox.hortonworks.com:3306/retail_db" \
+  --username=retail_dba \
+  --password=hadoop \
+  --table departments \
+  --target-dir /apps/hive/warehouse/retail_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --check-column "department_id" \
+  --incremental append \
+  --last-value 7 \
+  --outdir java_files
+
+
+sqoop job --list
+sqoop job --show sqoop_job
+sqoop job --exec sqoop_job
+
+
+
+--Merge
+sqoop merge --merge-key department_id \
+  --new-data /user/root/sqoop_merge/departments_delta \
+  --onto /user/root/sqoop_merge/departments \
+  --target-dir /user/root/sqoop_merge/departments_stage \
+  --class-name departments \
+  --jar-file <get_it_from_last_import>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+ 
